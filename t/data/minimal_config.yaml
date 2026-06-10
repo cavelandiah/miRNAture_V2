@@ -1,0 +1,10 @@
+---
+miRNAture:
+  Version: unit-test
+Program_locations:
+  cmsearch: t/bin/cmsearch
+Default_folders:
+  Data_folder: t/data
+Species_data:
+  Tag: tst
+  Name: Test species
