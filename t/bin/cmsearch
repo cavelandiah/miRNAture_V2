@@ -1,0 +1,15 @@
+#!/bin/sh
+log="${MIRNATURE_FAKE_LOG:-./cmsearch.args}"
+printf '%s\n' "$0 $*" >> "$log"
+out=""
+tbl=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -o) shift; out="$1" ;;
+    --tblout) shift; tbl="$1" ;;
+  esac
+  shift
+done
+[ -n "$out" ] && { mkdir -p "$(dirname "$out")"; printf '# fake cmsearch output\n' > "$out"; }
+[ -n "$tbl" ] && { mkdir -p "$(dirname "$tbl")"; printf '# fake tblout\n' > "$tbl"; }
+exit 0

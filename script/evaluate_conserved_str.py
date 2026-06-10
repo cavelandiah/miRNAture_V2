@@ -3,9 +3,6 @@
 import sys
 import re
 import os
-import RNA
-
-from Bio import AlignIO
 
 def evaluate_if_no_structure(str):
     str_len = len(str)
@@ -176,6 +173,7 @@ if __name__ == '__main__':
         family = name.split(".")[0]
     else:
         sys.exit()
+    from Bio import AlignIO
     align = AlignIO.read(seq, "stockholm")
     # Obtain information from secondary structure
     structure = align.column_annotations['secondary_structure']  # Obtain SStr
