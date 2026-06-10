@@ -1,0 +1,13 @@
+#!/bin/sh
+tool=$(basename "$0")
+log="${MIRNATURE_FAKE_LOG:-./${tool}.args}"
+printf '%s\n' "$0 $*" >> "$log"
+out=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -out|-o|--tblout) shift; out="$1" ;;
+  esac
+  shift
+done
+[ -n "$out" ] && { mkdir -p "$(dirname "$out")"; printf '# fake %s output\n' "$tool" > "$out"; }
+exit 0

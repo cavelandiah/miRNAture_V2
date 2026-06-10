@@ -3,20 +3,32 @@
 use strict;
 use warnings;
 
-use POSIX qw(strftime);
-use Getopt::Long qw(HelpMessage GetOptionsFromArray);
-use Pod::Usage;
-use YAML::Tiny;
-use Term::ANSIColor;
 use Cwd qw(getcwd abs_path);
+use File::Spec;
 
 use lib "lib";
-use Mir::ConfigurationFile;
-use Mir::miRNAture;
-use Mir::miRNAnchor;
-use Mir::Eval;
-use Mir::Summarise;
-use MiRNAnchor::Tools;
+
+sub normalize_cli_path {
+	my ($path) = @_;
+	return $path if !defined $path || $path eq "";
+	return $path if File::Spec->file_name_is_absolute($path);
+	my $absolute = abs_path($path);
+	return defined $absolute ? $absolute : File::Spec->rel2abs($path);
+}
+
+return 1 if caller;
+
+require POSIX; POSIX->import(qw(strftime));
+require Getopt::Long; Getopt::Long->import(qw(HelpMessage GetOptionsFromArray GetOptions));
+require Pod::Usage; Pod::Usage->import(qw(pod2usage));
+require YAML::Tiny;
+require Term::ANSIColor; Term::ANSIColor->import();
+require Mir::ConfigurationFile;
+require Mir::miRNAture;
+require Mir::miRNAnchor;
+require Mir::Eval;
+require Mir::Summarise;
+require MiRNAnchor::Tools; MiRNAnchor::Tools->import();
 our $VERSION = '1.10';
 
 ### Input data
@@ -86,27 +98,13 @@ pod2usage ( -message => "Seems that you did pass an empty flag, please refer to 
 @strategy = split (/,/, join(',',@strategy));
 
 # Relative paths correction for input paths
-if ($subset_models && $subset_models !~ /^\/\.+\//){
-	$subset_models = abs_path($subset_models);
-}
-if ($user_folder && $user_folder !~ /^\/\.+\//){
-	$user_folder = abs_path($user_folder);
-}
-if ($path_blast_queries !~ /^\/\.+\//){
-	$path_blast_queries = abs_path($path_blast_queries);
-}
-if ($work_folder !~ /^\/\.+\//){
-	$work_folder = abs_path($work_folder);
-}
-if ($species_genome_path !~ /^\/\.+\//){
-	$species_genome_path = abs_path($species_genome_path);
-}
-if ($mirfix_path && $mirfix_path !~ /^\/\.+\//){
-	$mirfix_path = abs_path($mirfix_path);
-}
-if ($data_path !~ /^\/\.+\//){
-	$data_path = abs_path($data_path);
-}
+$subset_models = normalize_cli_path($subset_models);
+$user_folder = normalize_cli_path($user_folder);
+$path_blast_queries = normalize_cli_path($path_blast_queries);
+$work_folder = normalize_cli_path($work_folder);
+$species_genome_path = normalize_cli_path($species_genome_path);
+$mirfix_path = normalize_cli_path($mirfix_path);
+$data_path = normalize_cli_path($data_path);
 
 my $config_file = Mir::ConfigurationFile->new (
 	stage => $stagesRun,
