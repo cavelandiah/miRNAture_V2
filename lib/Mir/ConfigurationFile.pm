@@ -192,6 +192,37 @@ has 'nbitscore_cut' => (
 );
 
 
+
+has 'cmsearch_evalue' => (
+	is => 'ro',
+	isa => 'Maybe[Num]',
+	required => 0,
+);
+
+has 'cmsearch_profile' => (
+	is => 'ro',
+	isa => 'Maybe[Str]',
+	required => 0,
+);
+
+has 'cmsearch_cpu' => (
+	is => 'ro',
+	isa => 'Maybe[Int]',
+	required => 0,
+);
+
+has 'cmsearch_jobs' => (
+	is => 'ro',
+	isa => 'Maybe[Int]',
+	required => 0,
+);
+
+has 'cmsearch_extra_args' => (
+	is => 'ro',
+	isa => 'Maybe[Str]',
+	required => 0,
+);
+
 has 'evaluation_results_folder' => (
 	is => 'ro',
 	isa => 'Path::Class::Dir',
@@ -512,6 +543,11 @@ sub write_config_file {
 	$yaml->[3]->{Homology_options}{"Mode"} = $shift->mode;
 	$yaml->[3]->{Homology_options}{"Parallel"} = $shift->parallel;
 	$yaml->[3]->{Homology_options}{"Parallel_linux"} = $shift->parallel_linux;
+	$yaml->[3]->{Homology_options}{"cmsearch_evalue"} = defined $shift->cmsearch_evalue && $shift->cmsearch_evalue ne "" ? $shift->cmsearch_evalue : 0.015;
+	$yaml->[3]->{Homology_options}{"cmsearch_profile"} = defined $shift->cmsearch_profile && $shift->cmsearch_profile ne "" ? $shift->cmsearch_profile : "canonical";
+	$yaml->[3]->{Homology_options}{"cmsearch_cpu"} = defined $shift->cmsearch_cpu && $shift->cmsearch_cpu ne "" ? $shift->cmsearch_cpu : 5;
+	$yaml->[3]->{Homology_options}{"cmsearch_jobs"} = defined $shift->cmsearch_jobs && $shift->cmsearch_jobs ne "" ? $shift->cmsearch_jobs : "";
+	$yaml->[3]->{Homology_options}{"cmsearch_extra_args"} = defined $shift->cmsearch_extra_args ? $shift->cmsearch_extra_args : "";
 	if ($shift->blast_strategy){
 		$yaml->[3]->{Homology_options}{"Blast_strategies"} = $shift->blast_strategy;
 	}

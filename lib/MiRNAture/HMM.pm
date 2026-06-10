@@ -84,6 +84,14 @@ has 'cmsearch_program_path' => (
 	required => 1,
 );
 
+
+has 'cmsearch_options' => (
+	is => 'ro',
+	isa => 'HashRef',
+	required => 0,
+	default => sub { {} },
+);
+
 with 'MiRNAture::ToolBox'; 
 with 'MiRNAture::Cleaner';
 
@@ -94,13 +102,13 @@ sub create_folders_hmm {
 
 sub search_homology_HMM {
 	my ($shift, $zvalue, $minBitscore, $maxthreshold) = @_;
-	searchHomologyHMM($shift->genome_subject, $shift->subject_species, $shift->output_folder->stringify, $shift->path_hmm_models, $shift->path_covariance, $shift->bitscores_CM, $shift->length_CM, $shift->names_CM, $shift->families_names_CM, $shift->nhmmer_program_path->stringify, $shift->cmsearch_program_path->stringify, $zvalue, $minBitscore, $maxthreshold, $shift->list_models);
+	searchHomologyHMM($shift->genome_subject, $shift->subject_species, $shift->output_folder->stringify, $shift->path_hmm_models, $shift->path_covariance, $shift->bitscores_CM, $shift->length_CM, $shift->names_CM, $shift->families_names_CM, $shift->nhmmer_program_path->stringify, $shift->cmsearch_program_path->stringify, $zvalue, $minBitscore, $maxthreshold, $shift->list_models, $shift->cmsearch_options);
 	my @result_files = check_folder_files($shift->output_folder->stringify."/".$shift->subject_species, "\.tab\.true\.table");
 	for (my $i = 0; $i <= $#result_files; $i++) {
 		my $hmm = $result_files[$i];
 		$hmm =~ s/([A-Za-z]+\.)(.*)(\.tab\.true\.table)/$2/g;
 		getSequencesFasta($shift->subject_species, $shift->genome_subject, $hmm, $shift->output_folder->stringify."/".$shift->subject_species, "2", $shift->length_CM, $shift->names_CM); #Header mode == 2 HMM
-		searchStructureHMM($hmm, $shift->genome_subject, $shift->subject_species, $shift->output_folder->stringify, $shift->path_hmm_models, $shift->path_covariance, $shift->bitscores_CM, $shift->length_CM, $shift->names_CM, $shift->families_names_CM, $shift->nhmmer_program_path->stringify, $shift->cmsearch_program_path->stringify, $zvalue, $minBitscore, $maxthreshold, $shift->list_models);
+		searchStructureHMM($hmm, $shift->genome_subject, $shift->subject_species, $shift->output_folder->stringify, $shift->path_hmm_models, $shift->path_covariance, $shift->bitscores_CM, $shift->length_CM, $shift->names_CM, $shift->families_names_CM, $shift->nhmmer_program_path->stringify, $shift->cmsearch_program_path->stringify, $zvalue, $minBitscore, $maxthreshold, $shift->list_models, $shift->cmsearch_options);
 	}
 	return;
 }	
