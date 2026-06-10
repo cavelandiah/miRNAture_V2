@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use Test::More;
 use File::Temp qw(tempdir);
-use File::Copy qw(copy);
 use File::Spec;
 
 BEGIN {

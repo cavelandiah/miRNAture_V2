@@ -30,7 +30,7 @@ my @map = <$map_fh>;
 close $map_fh;
 chomp @map;
 my %seen = map { $_ => 1 } @map;
-ok($seen{'tst1\tcontig_alpha first contig'}, 'first original contig name is recorded');
-ok($seen{'tst2\tcontig_beta second contig'}, 'second original contig name is recorded');
+ok($seen{"tst1\tcontig_alpha first contig"}, 'first original contig name is recorded');
+ok($seen{"tst2\tcontig_beta second contig"}, 'second original contig name is recorded');
 
 done_testing;
