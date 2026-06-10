@@ -13,7 +13,7 @@ with 'MiRNAture::Evaluate';
 my %len;
 
 sub searchHomologyHMM {
-	my ($genome, $species, $outHMM, $current_HMM_models, $CM_path, $bitscores, $len_r, $names_r, $families_names, $nhmmer_path, $cmsearch_path, $zvalue, $minBitscore, $maxthreshold, $list_fam_file) = @_;
+	my ($genome, $species, $outHMM, $current_HMM_models, $CM_path, $bitscores, $len_r, $names_r, $families_names, $nhmmer_path, $cmsearch_path, $zvalue, $minBitscore, $maxthreshold, $list_fam_file, $cmsearch_options) = @_;
 	if (!-d "$outHMM/$species"){ #Check if already exists species-specific directory
 		create_folders($outHMM,$species);#Create folder specific to species
 	}
@@ -22,7 +22,7 @@ sub searchHomologyHMM {
 }
 
 sub searchStructureHMM {
-	my ($hmm, $genome, $species, $outHMM, $current_HMM_models, $CM_path, $bitscores, $len_r, $names_r, $families_names, $nhmmer_path, $cmsearch_path, $zvalue, $minBitscore, $maxthreshold, $list_fam_file) = @_;
+	my ($hmm, $genome, $species, $outHMM, $current_HMM_models, $CM_path, $bitscores, $len_r, $names_r, $families_names, $nhmmer_path, $cmsearch_path, $zvalue, $minBitscore, $maxthreshold, $list_fam_file, $cmsearch_options) = @_;
 	create_folders("$outHMM/$species","Infernal");#Create folder specific to species
 	my $infernal_out_path = "$outHMM/$species/Infernal";
 	if (-z "$outHMM/$species/$species.$hmm.tab.true.table.fasta" || !-e "$outHMM/$species/$species.$hmm.tab.true.table.fasta"){
@@ -30,7 +30,7 @@ sub searchStructureHMM {
 		return;	
 	} else {
 	$zvalue = $zvalue/2; # Because it is only one strand
-	cmsearch_specific_sequence($hmm, $CM_path, $infernal_out_path, $species, $cmsearch_path, $zvalue);
+	cmsearch_specific_sequence($hmm, $CM_path, $infernal_out_path, $species, $cmsearch_path, $zvalue, $cmsearch_options);
 	my @result_cmseach = check_folder_files($infernal_out_path, "tab");
 	my $molecule = get_family_name($hmm, $families_names);
 	create_folders("$outHMM/$species/Infernal","Final");#Create folder specific to species
@@ -40,22 +40,26 @@ sub searchStructureHMM {
 }
 
 sub cmsearch_specific_sequence_parallel {
-	my ($cm_path, $out_path_infernal, $genome_tag, $cmsearch_path, $Zscore) = @_;
+	my ($cm_path, $out_path_infernal, $genome_tag, $cmsearch_path, $Zscore, $cmsearch_options) = @_;
 	existenceProgram($cmsearch_path);
+	$cmsearch_options ||= {};
 	# Here have to resolve the path of CMs:  <25-04-22, cavelandiah> #
-	system("parallel --will-cite --rpl '.. s/(\.\.\/|\/.*\/)([A-Za-z]+\.)(.*)(\.tab\.true\.table\.fasta)/$3/;' $cmsearch_path -E 0.015 --notrunc -Z $Zscore --nohmmonly --noali --toponly --tblout $out_path_infernal/${genome_tag}.{..}.tab {} 1> /dev/null ::: $out_path_infernal/../$genome_tag.*.tab.true.table.fasta");
+	my $cmsearch_args = build_cmsearch_args($Zscore, $cmsearch_options, "--noali", "--toponly", "--tblout", "$out_path_infernal/${genome_tag}.{..}.tab");
+	my $parallel_jobs = defined $cmsearch_options->{jobs} && $cmsearch_options->{jobs} ne "" ? " -j $cmsearch_options->{jobs}" : "";
+	system("parallel --will-cite$parallel_jobs --rpl '.. s/(\.\.\/|\/.*\/)([A-Za-z]+\.)(.*)(\.tab\.true\.table\.fasta)/$3/;' $cmsearch_path $cmsearch_args {} 1> /dev/null ::: $out_path_infernal/../$genome_tag.*.tab.true.table.fasta");
 	return;
 }
 
 sub cmsearch_specific_sequence {
-	my ($hmm,$cm_models_path, $out_path_infernal, $genome_tag, $cmsearch_path, $Zscore) = @_;
+	my ($hmm,$cm_models_path, $out_path_infernal, $genome_tag, $cmsearch_path, $Zscore, $cmsearch_options) = @_;
 	existenceProgram($cmsearch_path);
+	$cmsearch_options ||= {};
 	my $cm = $hmm;
 	my $fasta = "$out_path_infernal/../$genome_tag.$hmm.tab.true.table.fasta";
 	foreach my $cm_models_path_specific (@$cm_models_path){
 		my $model = "$cm_models_path_specific/${cm}.cm";
 		if (-e $model && !-z $model){
-			my $param = "--cpu 5 -E 0.015 --notrunc -Z $Zscore --nohmmonly --noali --toponly --tblout $out_path_infernal/${genome_tag}.${cm}.tab $model $fasta";
+			my $param = build_cmsearch_args($Zscore, { %{$cmsearch_options || {}}, include_cpu => 1 }, "--noali", "--toponly", "--tblout", "$out_path_infernal/${genome_tag}.${cm}.tab") . " $model $fasta";
 			system "$cmsearch_path $param 1> /dev/null";
 		}
 	}

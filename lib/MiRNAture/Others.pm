@@ -61,6 +61,14 @@ has 'cmsearch_program_path' => (
 	coerce => 1,
 );
 
+
+has 'cmsearch_options' => (
+	is => 'ro',
+	isa => 'HashRef',
+	required => 0,
+	default => sub { {} },
+);
+
 sub create_folders_other {
 	my $shift = shift;
 	create_folders($shift->output_folder->stringify, "");

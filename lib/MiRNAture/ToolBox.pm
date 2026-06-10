@@ -2,7 +2,7 @@ package MiRNAture::ToolBox;
 
 use Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(evaluate_input_flags get_basic_files test_basic_file openF create_folders is_folder_empty copy_files check_folder_files getSequencesFasta extendBlastnCoordinates get_header_name generate_key check_if_exists getSpeciesName make_blast_database existenceProgram classify_2rd_align_results infer_data_from_cm infer_list_from_cm cmsearch print_error print_error2 print_result print_process read_config_file calculate_Z_value calculate_minimum_bitscore getSequencesFasta_final infer_name_database_cm);
+@EXPORT = qw(evaluate_input_flags get_basic_files test_basic_file openF create_folders is_folder_empty copy_files check_folder_files getSequencesFasta extendBlastnCoordinates get_header_name generate_key check_if_exists getSpeciesName make_blast_database existenceProgram classify_2rd_align_results infer_data_from_cm infer_list_from_cm cmsearch print_error print_error2 print_result print_process read_config_file calculate_Z_value calculate_minimum_bitscore getSequencesFasta_final infer_name_database_cm build_cmsearch_args);
 
 use Moose::Role; 
 use File::Copy; 
@@ -1506,6 +1506,36 @@ sub infer_data_from_cm {
 	}
 	close $OUT;
 	return;
+}
+
+
+sub build_cmsearch_args {
+	my ($zscore, $options, @extra_args) = @_;
+	$options ||= {};
+	my $profile = $options->{profile} || $options->{cmsearch_profile} || "canonical";
+	my %profile_args = (
+		canonical => [qw(--notrunc --nohmmonly)],
+		sensitive => [qw(--notrunc --max)],
+		fast      => [qw(--notrunc)],
+	);
+	if (!exists $profile_args{$profile}){
+		print_error("Unknown cmsearch_profile '$profile'. Valid profiles are: canonical, sensitive, fast");
+	}
+	my $evalue = defined $options->{evalue} ? $options->{evalue} : $options->{cmsearch_evalue};
+	$evalue = 0.015 if !defined $evalue || $evalue eq "";
+	my @args;
+	if ($options->{include_cpu}){
+		my $cpu = defined $options->{cpu} ? $options->{cpu} : $options->{cmsearch_cpu};
+		$cpu = 5 if !defined $cpu || $cpu eq "";
+		push @args, "--cpu", $cpu if $cpu > 0;
+	}
+	push @args, "-E", $evalue, @{$profile_args{$profile}}, "-Z", $zscore;
+	push @args, @extra_args;
+	my $extra = defined $options->{extra_args} ? $options->{extra_args} : $options->{cmsearch_extra_args};
+	if (defined $extra && $extra ne ""){
+		push @args, $extra;
+	}
+	return join " ", @args;
 }
 
 sub infer_list_from_cm {

@@ -38,6 +38,11 @@ my $mirfix_path = "";
 my $path_blast_queries = "";
 my $user_folder = "";
 my $debug = 0;
+my $cmsearch_evalue;
+my $cmsearch_profile;
+my $cmsearch_cpu;
+my $cmsearch_jobs;
+my $cmsearch_extra_args;
 my $help;
 my $ver;
 my $man;
@@ -63,6 +68,11 @@ GetOptions (
 	'parallel_slurm|ps=i' => \$parallel_run,
 	'parallel_linux|pe=i' => \$parallel_linux,
 	'debug_mode|dbug=i' => \$debug,
+	'cmsearch_evalue=f' => \$cmsearch_evalue,
+	'cmsearch_profile=s' => \$cmsearch_profile,
+	'cmsearch_cpu=i' => \$cmsearch_cpu,
+	'cmsearch_jobs=i' => \$cmsearch_jobs,
+	'cmsearch_extra_args=s' => \$cmsearch_extra_args,
     'version|v' => \$ver,
 ) or pod2usage (
 	-verbose => 99,
@@ -117,6 +127,11 @@ my $config_file = Mir::ConfigurationFile->new (
 	parallel_linux => $parallel_linux,
 	parallel => $parallel_run,
 	debug_mode => $debug,
+	cmsearch_evalue => $cmsearch_evalue,
+	cmsearch_profile => $cmsearch_profile,
+	cmsearch_cpu => $cmsearch_cpu,
+	cmsearch_jobs => $cmsearch_jobs,
+	cmsearch_extra_args => $cmsearch_extra_args,
 	evaluation_results_folder => $work_folder."/Final_miRNA_evaluation",
 	mirnanchor_folder => $work_folder."/miRNA_validation",
 );
@@ -320,6 +335,26 @@ Target list of CMs to be searched on subject genome/sequences. If not indicated,
 
 Directory with additional hidden Markov (HMMs) or covariance models (CMs) provided by the user. This must
 be contain a corresponding HMMs/ and CMs/ folders, which the user models will be identified.
+
+=item --cmsearch_evalue <FLOAT>
+
+Infernal cmsearch E-value cutoff. Default preserves the current pipeline cutoff of 0.015.
+
+=item --cmsearch_profile <canonical|sensitive|fast>
+
+Named cmsearch argument profile. The default C<canonical> preserves the current C<--notrunc --nohmmonly> behavior.
+
+=item --cmsearch_cpu <INT>
+
+Per-cmsearch C<--cpu> value for serial cmsearch calls. Default is 5, matching the current hard-coded value.
+
+=item --cmsearch_jobs <INT>
+
+GNU parallel job count for batched cmsearch calls. If omitted, GNU parallel uses its own default.
+
+=item --cmsearch_extra_args <STRING>
+
+Additional raw arguments appended to every cmsearch invocation.
 
 =item -w/-workdir <OUT_PATH>
 

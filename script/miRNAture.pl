@@ -39,6 +39,11 @@ my $parallel_run = "";
 my $parallel_linux = "";
 my $rep_cutoff; # Homology cutoff to speed-up the searches 
 my $maxthresholdBit; # nBitscore threshold to clean data: 0-1
+my $cmsearch_evalue;
+my $cmsearch_profile;
+my $cmsearch_cpu;
+my $cmsearch_jobs;
+my $cmsearch_extra_args;
 
 my $help = 0; 
 my $man = 0;
@@ -63,6 +68,11 @@ GetOptions (
     'parallel|ps=i' => \$parallel_run, # Parallel SLURM
     'parallel_linux|pe=i' => \$parallel_linux, # Parallel LINUX
     'new_models|nmodels=s{1,2}' => \@cm_model_others,
+    'cmsearch_evalue=f' => \$cmsearch_evalue,
+    'cmsearch_profile=s' => \$cmsearch_profile,
+    'cmsearch_cpu=i' => \$cmsearch_cpu,
+    'cmsearch_jobs=i' => \$cmsearch_jobs,
+    'cmsearch_extra_args=s' => \$cmsearch_extra_args,
 ) or pod2usage(2);
 @strategy = split (/,/, join(',',@strategy));
 
@@ -71,6 +81,13 @@ my $startComplete = time();
 my $new_model_path = $cm_model_others[-1];
 $rep_cutoff = evaluate_input_flags($nameC, $mode, $work_folder, $species, $parallel_run, $parallel_linux, $rep_cutoff, $new_model_path);
 my $configuration_mirnature = read_config_file("$work_folder/../miRNAture_configuration_$species.yaml");
+my %cmsearch_options = (
+    evalue => defined $cmsearch_evalue ? $cmsearch_evalue : $configuration_mirnature->[3]->{Homology_options}->{cmsearch_evalue},
+    profile => defined $cmsearch_profile ? $cmsearch_profile : $configuration_mirnature->[3]->{Homology_options}->{cmsearch_profile},
+    cpu => defined $cmsearch_cpu ? $cmsearch_cpu : $configuration_mirnature->[3]->{Homology_options}->{cmsearch_cpu},
+    jobs => defined $cmsearch_jobs ? $cmsearch_jobs : $configuration_mirnature->[3]->{Homology_options}->{cmsearch_jobs},
+    extra_args => defined $cmsearch_extra_args ? $cmsearch_extra_args : $configuration_mirnature->[3]->{Homology_options}->{cmsearch_extra_args},
+);
 my $current_dir = $configuration_mirnature->[3]->{Default_folders}->{Output_folder}."/TemporalFiles"; #getcwd;
 ## Working Paths
 get_basic_files($configuration_mirnature->[3]->{Default_folders}->{Data_folder});
@@ -212,6 +229,7 @@ if ($configuration_file->mode eq "blast"){
         families_names_CM => $families_names,
         nhmmer_program_path => $configuration_mirnature->[2]->{Program_locations}->{nhmmer},
         cmsearch_program_path => $configuration_mirnature->[2]->{Program_locations}->{cmsearch},
+        cmsearch_options => \%cmsearch_options,
         list_models => $configuration_file->list_file->stringify, 
     );
     $hmm_experiment->create_folders_hmm($work_folder);
@@ -231,6 +249,7 @@ if ($configuration_file->mode eq "blast"){
         names_CM => $names_r,
         families_names_CM => $families_names,
         cmsearch_program_path => $configuration_mirnature->[2]->{Program_locations}->{cmsearch},
+        cmsearch_options => \%cmsearch_options,
     );
     $cm_experiment->create_folders_cm;
     $cm_experiment->search_homology_CM($Zvalue,$minBitscore,$maxthresholdBit);
@@ -249,6 +268,7 @@ if ($configuration_file->mode eq "blast"){
         names_CM => $names_r,
         families_names_CM => $families_names,
         cmsearch_program_path => $configuration_mirnature->[2]->{Program_locations}->{cmsearch},
+        cmsearch_options => \%cmsearch_options,
     );					
     $other_experiment->create_folders_other;
     $other_experiment->search_homology_other($Zvalue,$minBitscore,$maxthresholdBit);
@@ -267,6 +287,7 @@ if ($configuration_file->mode eq "blast"){
         names_CM => $names_r,
         families_names_CM => $families_names,
         cmsearch_program_path => $configuration_mirnature->[2]->{Program_locations}->{cmsearch},
+        cmsearch_options => \%cmsearch_options,
     );					
     $other_experiment->create_folders_other;
     $other_experiment->search_homology_other($Zvalue,$minBitscore,$maxthresholdBit);
